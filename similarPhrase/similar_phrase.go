@@ -47,6 +47,18 @@ func getVector(phrase string, wordSlice []string) []float64 {
 
 func getVectorVal(words []string, word string, ch chan<- map[int]float64, index int) {
 	runeSliceWord := []rune(word)
+	runeSliceWord2 := []rune(word)
+	words2 := words
+	//формируем второй массив
+
+	//for _, val := range words {
+	//	vlr := []rune(val)
+	//	if len(vlr) >= 4 {
+	//		vlr = vlr[:len(vlr)-1]
+	//	}
+	//	words2 = append(words2, string(vlr))
+	//}
+
 	for len(runeSliceWord) >= 3 {
 		if contains(words, string(runeSliceWord)) {
 			ch <- map[int]float64{index: float64(len(string(runeSliceWord))) * 0.01}
@@ -54,7 +66,32 @@ func getVectorVal(words []string, word string, ch chan<- map[int]float64, index 
 		}
 		runeSliceWord = runeSliceWord[:len(runeSliceWord)-1]
 	}
+
+	for {
+		words2, isChanged := createWords2Slice(&words2)
+		if !isChanged {
+			break
+		}
+		if contains(words2, string(runeSliceWord2)) {
+			ch <- map[int]float64{index: float64(len(string(runeSliceWord2))) * 0.007}
+			return
+		}
+	}
 	ch <- map[int]float64{index: 0.0}
+}
+
+func createWords2Slice(words2 *[]string) ([]string, bool) {
+
+	var isChanged bool
+	for i, val := range *words2 {
+		vlr := []rune(val)
+		isChanged = false
+		if len(vlr) >= 4 {
+			(*words2)[i] = string(vlr[:len(vlr)-1])
+			isChanged = true
+		}
+	}
+	return *words2, isChanged
 }
 
 // Функция для проверки, содержится ли слово в списке
@@ -109,13 +146,32 @@ func mostSimilarPhrase(searchPhrase string, phrases []string) string {
 	}
 	return mostSimilarPhrase
 }
+func convertPhrasesMapToSlice(mp map[string]interface{}) []string {
+	var res []string
+	for key := range mp {
+		res = append(res, key)
+	}
+	return res
+}
 
 func main() {
-	phrases := []string{
-		"кофе это мое утро",
-		"кофе это моя страсть",
-		"чай это зеленый листик",
-		"чай это напиток богов",
+	mp := map[string]interface{}{
+		//"Без своей порции кофе утром я просто не могу начать день":                               100,
+		"Кофе - это не только напиток, это мой образ жизни":                                      200,
+		"Я увлечена кофе как искусством и наслаждаюсь каждой чашечкой":                           300,
+		"Каждый глоток кофе - это для меня настоящий райский кайф":                               400,
+		"Как же прекрасно начинать свое утро с ароматной чашечки кофе":                           400,
+		"Я не могу себе представить свою жизнь без кофе - это моя зависимость":                   400,
+		"Чай - это не просто напиток, это настоящая медитация и умиротворение для меня":          400,
+		"Я люблю чай за его способность расслабить и укрепить мой организм":                      200,
+		"Чашка горячего чая - это мой способ побаловать себя в конце дня":                        300,
+		"Как же великолепно наслаждаться чашечкой ароматного чая в уютной атмосфере своего дома": 100,
+		"кофе это мое утро":      150,
+		"кофе это моя страсть":   200,
+		"чай это зеленый листик": 300,
+		"чай это напиток богов":  12,
 	}
-	fmt.Println(mostSimilarPhrase("чай бог", phrases))
+
+	phrases := convertPhrasesMapToSlice(mp)
+	fmt.Println(mostSimilarPhrase("Без своей порции кофе утром я просто не могу начать день", phrases))
 }
