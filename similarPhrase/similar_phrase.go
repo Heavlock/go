@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"strings"
@@ -146,22 +147,50 @@ func mostSimilarPhrase(searchPhrase string, phrases []string) string {
 	}
 	return mostSimilarPhrase
 }
-func convertPhrasesMapToSlice(mp map[string]interface{}) []string {
+func convertPhrasesMapToSlice(mp map[string]int64) ([]string, map[string]int64) {
 	var res []string
-	for key := range mp {
+	maxFrequencyMap := make(map[string]int64)
+	for key, freq := range mp {
 		res = append(res, key)
+
+		mfKey, _ := getKeyFromMap(maxFrequencyMap)
+		if mfKey != "" {
+			if maxFrequencyMap[mfKey] < freq {
+				maxFrequencyMap[key] = freq
+				delete(maxFrequencyMap, mfKey)
+			}
+		} else {
+			maxFrequencyMap[key] = freq
+		}
 	}
-	return res
+	return res, maxFrequencyMap
 }
 
-func main() {
-	mp := map[string]interface{}{
-		//"Без своей порции кофе утром я просто не могу начать день":                               100,
+func deleteFromSlice(slice []string, val string) []string {
+	for i, v := range slice {
+		if v == val {
+			// Use append to remove the element at index i
+			slice = append(slice[:i], slice[i+1:]...)
+			break
+		}
+	}
+	return slice
+}
+func getKeyFromMap(mp map[string]int64) (string, error) {
+	for key := range mp {
+		return key, nil
+	}
+	return "", errors.New("не найдено значение с переданным ключом")
+}
+
+func getSortList() []map[string]int64 {
+	inpMp := map[string]int64{
+		"Без своей порции кофе утром я просто не могу начать день":                               100,
 		"Кофе - это не только напиток, это мой образ жизни":                                      200,
 		"Я увлечена кофе как искусством и наслаждаюсь каждой чашечкой":                           300,
 		"Каждый глоток кофе - это для меня настоящий райский кайф":                               400,
 		"Как же прекрасно начинать свое утро с ароматной чашечки кофе":                           400,
-		"Я не могу себе представить свою жизнь без кофе - это моя зависимость":                   400,
+		"Я не могу себе представить свою жизнь без кофе - это моя зависимость":                   401,
 		"Чай - это не просто напиток, это настоящая медитация и умиротворение для меня":          400,
 		"Я люблю чай за его способность расслабить и укрепить мой организм":                      200,
 		"Чашка горячего чая - это мой способ побаловать себя в конце дня":                        300,
@@ -172,6 +201,23 @@ func main() {
 		"чай это напиток богов":  12,
 	}
 
-	phrases := convertPhrasesMapToSlice(mp)
-	fmt.Println(mostSimilarPhrase("Без своей порции кофе утром я просто не могу начать день", phrases))
+	phrases, maxFreqMap := convertPhrasesMapToSlice(inpMp)
+	phrase, err := getKeyFromMap(maxFreqMap)
+	if err != nil {
+		panic(err.Error())
+	}
+	phrases = deleteFromSlice(phrases, phrase)
+
+	var res = []map[string]int64{maxFreqMap}
+
+	for range phrases {
+		phrase = mostSimilarPhrase(phrase, phrases)
+		res = append(res, map[string]int64{phrase: inpMp[phrase]})
+		phrases = deleteFromSlice(phrases, phrase)
+	}
+	return res
+}
+
+func main() {
+	fmt.Println(getSortList())
 }
