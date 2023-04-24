@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -217,7 +218,20 @@ func getSortList() []map[string]int64 {
 	}
 	return res
 }
+func toJson(mp []map[string]int64) string {
+	jsonData, err := json.Marshal(mp)
+	if err != nil {
+		fmt.Println("Error marshaling JSON:", err)
+		return ""
+	}
+	return string(jsonData)
+}
 
 func main() {
-	fmt.Println(getSortList())
+	res := toJson(getSortList())
+	fmt.Println(res)
+	//var s [4]int64
+	//s = append(s, 123, 333, 777)
+	//fmt.Println(s)
+	//fmt.Println(getSortList())
 }
